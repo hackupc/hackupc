@@ -1,0 +1,53 @@
+name: Deploy on release through FTPS
+on: release
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v2
+      - name: 🎯 Set up Node.js using nvm
+        uses: dcodeIO/setup-node-nvm@v4
+      - name: 🎁 Install Yarn
+        run: npm install -g yarn
+      - name: 🗂 Configure cache 1
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn config get cacheFolder)"
+      - name: 🗂 Configure cache 2
+        uses: actions/cache@v2
+        id: yarn-cache
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+      - name: 🎁 Install dependencies
+        run: yarn install --immutable
+      - name: 👷🏽‍♂️ Build the site
+        run: yarn run dist
+      - name: 💾 Store the build
+        uses: actions/upload-artifact@v2
+        with:
+          name: dist
+          path: dist
+  deploy-release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚚 Get the build
+        uses: actions/download-artifact@v2
+        with:
+          name: dist
+          path: dist
+      - name: 🚀 Send static files through FTPS
+        uses: SamKirkland/FTP-Deploy-Action@4.0.0
+        with:
+          server: ftps.hackupc.com # TODO: set-up this subdomain
+          port: 990
+          local-dir: /dist/
+          server-dir: /hackupc-landings/${{ github.event.release.tag_name }}/ # TODO: use the right path
+          username: GitHubActionsFTP # TODO: create this user in the server
+          password: ${{ secrets.ftp_password }} # TODO: set-up this password
+          protocol: ftps
+          security: strict
