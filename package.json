@@ -50,7 +50,7 @@
     "prettier-config-standard": "^4.0.0",
     "purgecss-webpack-plugin": "^4.0.3",
     "sass": "^1.32.12",
-    "sass-loader": "^11.0.1",
+    "sass-loader": "^12.1.0",
     "style-loader": "^2.0.0",
     "stylelint": "^13.13.1",
     "stylelint-config-idiomatic-order": "^8.1.0",
